@@ -46,6 +46,18 @@ jobs:
         run: sed -i '/#replace_package_name_marker/{n;s/name="[^"]*"/name="dspy-ai-test"/;}' pyproject.toml  
       - name: Build a binary wheel
         run: python3 -m build
+      # Test the locally built wheel
+      - name: Create test environment
+        run: python -m venv test_env
+      - name: Test package installation and functionality
+        run: |
+          source test_env/bin/activate
+          # Install the locally built wheel and testing dependencies
+          pip install dist/*.whl pytest
+          # Run specific test directory
+          pytest tests/predict/ -v
+          deactivate
+      # Publish to test-PyPI
       - name: Publish distribution 📦 to test-PyPI
         uses: pypa/gh-action-pypi-publish@release/v1 # This requires a trusted publisher to be setup in pypi/testpypi
         with: 
