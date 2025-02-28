@@ -43,7 +43,7 @@ jobs:
       - name: Update version in pyproject.toml
         run: sed -i '/#replace_package_version_marker/{n;s/version="[^"]*"/version="${{ steps.check_version.outputs.version }}"/;}' pyproject.toml  
       - name: Update version in __metadata__.py
-        run: sed -i 's/^__version__ = "[^"]*"/__version__ = "${{ needs.extract-tag.outputs.version }}"/' dspy/__metadata__.py      
+        run: sed -i '/#replace_package_version_marker/{n;s/__version__="[^"]*"/__version__="${{ steps.check_version.outputs.version }}"/;}' ./dspy/__metadata__.py   
       - name: Update package name in pyproject.toml
         run: sed -i '/#replace_package_name_marker/{n;s/name="[^"]*"/name="dspy-test-chenmoney"/;}' pyproject.toml  
       - name: Build a binary wheel
@@ -85,7 +85,7 @@ jobs:
       - name: Update version in pyproject.toml
         run: sed -i '/#replace_package_version_marker/{n;s/version *= *"[^"]*"/version="${{ needs.extract-tag.outputs.version }}"/;}' pyproject.toml
       - name: Update version in __metadata__.py
-        run: sed -i 's/^__version__ = "[^"]*"/__version__ = "${{ needs.extract-tag.outputs.version }}"/' dspy/__metadata__.py
+        run: sed -i '/#replace_package_version_marker/{n;s/__version__="[^"]*"/__version__="${{ steps.check_version.outputs.version }}"/;}' ./dspy/__metadata__.py
       # Publish to dspy
       - name: Update package name in pyproject.toml
         run: sed -i '/#replace_package_name_marker/{n;s/name *= *"[^"]*"/name="dspy"/;}' pyproject.toml
