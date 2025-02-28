@@ -7,7 +7,7 @@ from dspy.primitives.prediction import Prediction
 from dspy.primitives.program import Module
 from dspy.signatures.signature import ensure_signature
 from dspy.utils.callback import with_callbacks
-
+from dspy.dsp.utils.settings import settings
 
 class Predict(Module, Parameter):
     def __init__(self, signature, callbacks=None, **config):
@@ -95,7 +95,8 @@ class Predict(Module, Parameter):
         import dspy
 
         adapter = dspy.settings.adapter or dspy.ChatAdapter()
-        completions = adapter(lm, lm_kwargs=config, signature=signature, demos=demos, inputs=kwargs, predict=self)
+        with settings.context(caller_predict=self):
+            completions = adapter(lm, lm_kwargs=config, signature=signature, demos=demos, inputs=kwargs)
 
         pred = Prediction.from_completions(completions, signature=signature)
 
