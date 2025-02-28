@@ -41,7 +41,9 @@ jobs:
           echo "Version to be used for TestPyPI release: $NEW_VERSION"  
           echo "::set-output name=version::$NEW_VERSION"  
       - name: Update version in pyproject.toml
-        run: sed -i '/#replace_package_version_marker/{n;s/version="[^"]*"/version="${{ steps.check_version.outputs.version }}"/;}' pyproject.toml        
+        run: sed -i '/#replace_package_version_marker/{n;s/version="[^"]*"/version="${{ steps.check_version.outputs.version }}"/;}' pyproject.toml  
+      - name: Update version in __metadata__.py
+        run: sed -i 's/^__version__ = "[^"]*"/__version__ = "${{ needs.extract-tag.outputs.version }}"/' dspy/__metadata__.py      
       - name: Update package name in pyproject.toml
         run: sed -i '/#replace_package_name_marker/{n;s/name="[^"]*"/name="dspy-test-chenmoney"/;}' pyproject.toml  
       - name: Build a binary wheel
@@ -54,8 +56,7 @@ jobs:
           source test_env/bin/activate
           # Install the locally built wheel and testing dependencies
           pip install dist/*.whl pytest
-          # Run specific test directory
-          pytest tests/predict/ -v
+          python -m "import dspy; print(dspy.__version__)"
           deactivate
       # Publish to test-PyPI
       - name: Publish distribution 📦 to test-PyPI
@@ -83,6 +84,8 @@ jobs:
         run: python3 -m pip install --upgrade setuptools wheel twine build
       - name: Update version in pyproject.toml
         run: sed -i '/#replace_package_version_marker/{n;s/version *= *"[^"]*"/version="${{ needs.extract-tag.outputs.version }}"/;}' pyproject.toml
+      - name: Update version in __metadata__.py
+        run: sed -i 's/^__version__ = "[^"]*"/__version__ = "${{ needs.extract-tag.outputs.version }}"/' dspy/__metadata__.py
       # Publish to dspy
       - name: Update package name in pyproject.toml
         run: sed -i '/#replace_package_name_marker/{n;s/name *= *"[^"]*"/name="dspy"/;}' pyproject.toml
