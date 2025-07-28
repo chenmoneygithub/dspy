@@ -1,0 +1,42 @@
+# DSPy Translation Template
+# Copyright (C) 2024 DSPy
+# This file is distributed under the same license as the DSPy package.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: DSPy\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# ChainOfThought reasoning prefix
+msgid "Reasoning: Let's think step by step in order to"
+msgstr ""
+
+# ChainOfThought reasoning description
+msgid "${reasoning}"
+msgstr ""
+
+# ChatAdapter field description header
+msgid "Your input fields are:"
+msgstr ""
+
+msgid "Your output fields are:"
+msgstr ""
+
+# ChatAdapter structure description
+msgid "All interactions will be structured in the following way, with the appropriate values filled in."
+msgstr ""
+
+# Common field descriptions
+msgid "The question to answer"
+msgstr ""
+
+msgid "The answer to the question"
+msgstr ""

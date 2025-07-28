@@ -5,6 +5,32 @@ import pydantic
 # as it would give a name clash.
 DSPY_FIELD_ARG_NAMES = ["desc", "prefix", "format", "parser", "__dspy_field_type"]
 
+
+def _resolve_variable_value(value):
+    """Resolve a Variable to its string value, or return value as-is if not a Variable."""
+    # Import Variable here to avoid circular imports
+    try:
+        from dspy.primitives.variable import Variable
+        if isinstance(value, Variable):
+            return value.resolve()
+    except ImportError:
+        pass
+    return value
+
+
+def get_field_variable(field_info):
+    """Get the original Variable object from a field, if it exists.
+    
+    Args:
+        field_info: A pydantic FieldInfo object
+        
+    Returns:
+        Variable object if the field was created with a Variable, None otherwise
+    """
+    if hasattr(field_info, 'json_schema_extra') and field_info.json_schema_extra:
+        return field_info.json_schema_extra.get("_original_desc_variable")
+    return None
+
 PYDANTIC_CONSTRAINT_MAP = {
     "gt": "greater than: ",
     "ge": "greater than or equal to: ",
@@ -27,12 +53,22 @@ def move_kwargs(**kwargs):
     json_schema_extra = {}
     for k, v in kwargs.items():
         if k in DSPY_FIELD_ARG_NAMES:
-            json_schema_extra[k] = v
+            # Resolve Variables for desc field, but store original Variable for prefix/format
+            if k == "desc":
+                # Store both the original Variable (for optimization) and resolved value
+                json_schema_extra[k] = _resolve_variable_value(v)
+                if v != json_schema_extra[k]:  # If it was a Variable
+                    json_schema_extra["_original_desc_variable"] = v
+            else:
+                json_schema_extra[k] = v
         else:
             pydantic_kwargs[k] = v
     # Also copy over the pydantic "description" if no dspy "desc" is given.
     if "description" in kwargs and "desc" not in json_schema_extra:
-        json_schema_extra["desc"] = kwargs["description"]
+        resolved_desc = _resolve_variable_value(kwargs["description"])
+        json_schema_extra["desc"] = resolved_desc
+        if resolved_desc != kwargs["description"]:  # If it was a Variable
+            json_schema_extra["_original_desc_variable"] = kwargs["description"]
     constraints = _translate_pydantic_field_constraints(**kwargs)
     if constraints:
         json_schema_extra["constraints"] = constraints

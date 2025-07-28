@@ -1,0 +1,42 @@
+# DSPy Chinese Translation
+# Copyright (C) 2024 DSPy
+# This file is distributed under the same license as the DSPy package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DSPy\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: 2024-01-01 12:00+0000\n"
+"Last-Translator: DSPy Team\n"
+"Language-Team: Chinese\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# ChainOfThought reasoning prefix
+msgid "Reasoning: Let's think step by step in order to"
+msgstr "推理：让我们逐步思考，以便"
+
+# ChainOfThought reasoning description
+msgid "${reasoning}"
+msgstr "${推理}"
+
+# ChatAdapter field description header
+msgid "Your input fields are:"
+msgstr "您的输入字段是："
+
+msgid "Your output fields are:"
+msgstr "您的输出字段是："
+
+# ChatAdapter structure description
+msgid "All interactions will be structured in the following way, with the appropriate values filled in."
+msgstr "所有交互都将按照以下方式构建，并填入适当的值。"
+
+# Common field descriptions
+msgid "The question to answer"
+msgstr "要回答的问题"
+
+msgid "The answer to the question"
+msgstr "问题的答案"

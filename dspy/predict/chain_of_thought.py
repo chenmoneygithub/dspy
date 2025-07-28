@@ -4,7 +4,21 @@ from pydantic.fields import FieldInfo
 
 import dspy
 from dspy.primitives.module import Module
+from dspy.primitives.variable import Variable
 from dspy.signatures.signature import Signature, ensure_signature
+
+# Define Variables for ChainOfThought strings
+COT_REASONING_PREFIX = Variable(
+    "cot.reasoning.prefix",
+    "Reasoning: Let's think step by step in order to",
+    description="Prefix for chain-of-thought reasoning process"
+)
+
+COT_REASONING_DESC = Variable(
+    "cot.reasoning.desc", 
+    "${reasoning}",
+    description="Description for chain-of-thought reasoning field"
+)
 
 
 class ChainOfThought(Module):
@@ -26,8 +40,8 @@ class ChainOfThought(Module):
         """
         super().__init__()
         signature = ensure_signature(signature)
-        prefix = "Reasoning: Let's think step by step in order to"
-        desc = "${reasoning}"
+        prefix = COT_REASONING_PREFIX
+        desc = COT_REASONING_DESC
         rationale_field_type = rationale_field.annotation if rationale_field else rationale_field_type
         rationale_field = rationale_field if rationale_field else dspy.OutputField(prefix=prefix, desc=desc)
         extended_signature = signature.prepend(name="reasoning", field=rationale_field, type_=rationale_field_type)

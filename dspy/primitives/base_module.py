@@ -66,6 +66,98 @@ class BaseModule:
 
         return named_parameters
 
+    def named_variables(self):
+        """
+        Find all Variables in the module and its sub-modules.
+        Similar to named_parameters but for Variables.
+        """
+        try:
+            from dspy.primitives.variable import Variable
+            from dspy.signatures.field import get_field_variable  
+            from dspy.signatures.signature import get_signature_instructions_variable
+        except ImportError:
+            return []
+
+        import dspy
+
+        visited = set()
+        named_variables = []
+
+        def add_variable(var_name, var_value):
+            if isinstance(var_value, Variable):
+                if id(var_value) not in visited:
+                    visited.add(id(var_value))
+                    named_variables.append((var_name, var_value))
+
+            elif isinstance(var_value, dspy.Module):
+                # When a sub-module is pre-compiled, keep it frozen.
+                if not getattr(var_value, "_compiled", False):
+                    for sub_name, var in var_value.named_variables():
+                        add_variable(f"{var_name}.{sub_name}", var)
+
+        # Check if this module itself is a Variable
+        if isinstance(self, Variable):
+            add_variable("self", self)
+
+        # Check direct attributes for Variables
+        for name, value in self.__dict__.items():
+            if isinstance(value, Variable):
+                add_variable(name, value)
+
+            elif isinstance(value, dspy.Module):
+                # When a sub-module is pre-compiled, keep it frozen.
+                if not getattr(value, "_compiled", False):
+                    for sub_name, var in value.named_variables():
+                        add_variable(f"{name}.{sub_name}", var)
+
+            elif isinstance(value, (list, tuple)):
+                for idx, item in enumerate(value):
+                    add_variable(f"{name}[{idx}]", item)
+
+            elif isinstance(value, dict):
+                for key, item in value.items():
+                    add_variable(f"{name}['{key}']", item)
+
+        # Check for Variables in signature fields and instructions
+        try:
+            # Check if this module has predictors with signatures
+            if hasattr(self, 'named_predictors'):
+                for pred_name, predictor in self.named_predictors():
+                    if hasattr(predictor, 'signature'):
+                        signature = predictor.signature
+                        
+                        # Check signature instructions for Variables
+                        instr_var = get_signature_instructions_variable(signature)
+                        if instr_var:
+                            add_variable(f"{pred_name}.signature.instructions", instr_var)
+                        
+                        # Check field descriptions for Variables
+                        for field_name, field_info in signature.fields.items():
+                            field_var = get_field_variable(field_info)
+                            if field_var:
+                                add_variable(f"{pred_name}.signature.{field_name}.desc", field_var)
+            
+            # Check if this module itself has a signature
+            if hasattr(self, 'signature'):
+                signature = self.signature
+                
+                # Check signature instructions for Variables
+                instr_var = get_signature_instructions_variable(signature)
+                if instr_var:
+                    add_variable("signature.instructions", instr_var)
+                
+                # Check field descriptions for Variables  
+                for field_name, field_info in signature.fields.items():
+                    field_var = get_field_variable(field_info)
+                    if field_var:
+                        add_variable(f"signature.{field_name}.desc", field_var)
+                        
+        except (AttributeError, ImportError):
+            # Skip signature inspection if not available
+            pass
+
+        return named_variables
+
     def named_sub_modules(self, type_=None, skip_compiled=False) -> Generator[tuple[str, "BaseModule"], None, None]:
         """Find all sub-modules in the module, as well as their names.
 
@@ -106,6 +198,14 @@ class BaseModule:
 
     def parameters(self):
         return [param for _, param in self.named_parameters()]
+
+    def variables(self):
+        """Return all Variables in the module."""
+        return [var for _, var in self.named_variables()]
+
+    def trainable_variables(self):
+        """Return all trainable Variables in the module."""
+        return [var for var in self.variables() if getattr(var, 'trainable', True)]
 
     def deepcopy(self):
         """Deep copy the module.

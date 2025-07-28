@@ -31,6 +31,30 @@ from pydantic.fields import FieldInfo
 from dspy.signatures.field import InputField, OutputField
 
 
+def _resolve_variable_value(value):
+    """Resolve a Variable to its string value, or return value as-is if not a Variable."""
+    # Import Variable here to avoid circular imports
+    try:
+        from dspy.primitives.variable import Variable
+        if isinstance(value, Variable):
+            return value.resolve()
+    except ImportError:
+        pass
+    return value
+
+
+def get_signature_instructions_variable(signature_cls):
+    """Get the original Variable object from signature instructions, if it exists.
+    
+    Args:
+        signature_cls: A Signature class
+        
+    Returns:
+        Variable object if the instructions were set with a Variable, None otherwise
+    """
+    return getattr(signature_cls, '_original_instructions_variable', None)
+
+
 def _default_instructions(cls) -> str:
     inputs_ = ", ".join([f"`{field}`" for field in cls.input_fields])
     outputs_ = ", ".join([f"`{field}`" for field in cls.output_fields])
@@ -191,10 +215,20 @@ class SignatureMeta(type(BaseModel)):
 
     @property
     def instructions(cls) -> str:
-        return inspect.cleandoc(getattr(cls, "__doc__", ""))
+        doc = getattr(cls, "__doc__", "")
+        # Resolve Variable if the instructions contain a Variable
+        return _resolve_variable_value(inspect.cleandoc(doc))
 
     @instructions.setter
     def instructions(cls, instructions: str) -> None:
+        # Store the original Variable if provided (for optimization access)
+        if hasattr(instructions, '__class__'):
+            try:
+                from dspy.primitives.variable import Variable
+                if isinstance(instructions, Variable):
+                    cls._original_instructions_variable = instructions
+            except ImportError:
+                pass
         cls.__doc__ = instructions
 
     @property
